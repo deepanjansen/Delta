@@ -13,16 +13,21 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.ContentResolver
 import android.content.IntentFilter
 import android.database.Cursor
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.provider.ContactsContract
+import android.provider.MediaStore
 
 import androidx.core.app.ActivityCompat.startActivityForResult
 import android.provider.Settings
@@ -30,12 +35,19 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
+import java.util.Calendar
 
 
 @Suppress("DEPRECATION")
 class Functionality(private val context: Context) {
     var flashLightStatus: Boolean = false
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private var mediaPlayer: MediaPlayer? = null
+    private var currentSongIndex = 0
+    private var songs: MutableList<String> = mutableListOf()
+    var isShuffling = false
+    private var originalPlaylist: List<String>? = null
 
     // Mapping app names to their correct package names
     private val appPackages = mapOf(
@@ -47,10 +59,12 @@ class Functionality(private val context: Context) {
         "snapchat" to "com.snapchat.android",
         "spotify" to "com.spotify.music",
         "chrome" to "com.android.chrome",
-        "gmail" to "com.google.android.gm"
+        "gmail" to "com.google.android.gm",
+        "playstore" to "com.android.vending",
+        "google" to "com.google.android.googlequicksearchbox"
     )
 
-    // Mapping apps to their correct website URLs
+    //  // Mapping app names to their correct app urls
     private val appUrls = mapOf(
         "youtube" to "https://www.youtube.com",
         "instagram" to "https://www.instagram.com",
@@ -60,29 +74,49 @@ class Functionality(private val context: Context) {
         "snapchat" to "https://www.snapchat.com",
         "spotify" to "https://www.spotify.com",
         "chrome" to "https://www.google.com",
-        "gmail" to "https://mail.google.com"
+        "gmail" to "https://mail.google.com",
+        "playstore" to "https://play.google.com/store",
+        "google" to "https://www.google.com"
     )
 
-    fun open_app(appName: String) {
-        val packageName = appPackages[appName.lowercase()]
-        val url = appUrls[appName.lowercase()]
 
-        if (packageName != null) {
-            val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-            if (intent != null) {
+    fun open_app(appName: String) {
+        val lowerName = appName.lowercase()
+        val packageName = appPackages[lowerName]
+        val url = appUrls[lowerName]
+
+        when (lowerName) {
+            "setting" -> {
+                val intent = Intent(Settings.ACTION_SETTINGS)
                 context.startActivity(intent)
                 return
             }
-        }
+            "messages", "sms" -> {
+                val intent = Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_APP_MESSAGING)
+                }
+                context.startActivity(intent)
+                return
+            }
+            else -> {
+                if (packageName != null) {
+                    val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+                    if (intent != null) {
+                        context.startActivity(intent)
+                        return
+                    }
+                }
 
-        // If app is not installed, open in browser
-        if (url != null) {
-            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            context.startActivity(browserIntent)
-        } else {
-            Toast.makeText(context, "App not found", Toast.LENGTH_SHORT).show()
+                if (url != null) {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(browserIntent)
+                } else {
+                    Toast.makeText(context, "App not found", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun toggleFlashlight(turnOn: Boolean): Int {
@@ -97,6 +131,7 @@ class Functionality(private val context: Context) {
         }
 
     }
+
     // extract name from text
     fun extractContactName(input: String): String? {
         val cleanedInput = input.lowercase().trim()
@@ -114,8 +149,14 @@ class Functionality(private val context: Context) {
             return "Could not extract contact name from the command."
         }
 
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CALL_PHONE
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_CONTACTS
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
                 context as Activity,
@@ -195,18 +236,20 @@ class Functionality(private val context: Context) {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
 //            return "Cannot toggle Wi-Fi programmatically on Android 10+. Opening Wi-Fi settings..."
-            return  "Opening Wi-Fi settings. Please turn it manually."
+            return "Opening Wi-Fi settings. Please turn it manually."
         }
     }
 
     // to turn on/off Bluetooth
     fun switchBluetooth(context: Context, switch: Int): String {
-        val bluetoothAdapter: BluetoothAdapter? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-            bluetoothManager.adapter
-        } else {
-            BluetoothAdapter.getDefaultAdapter()
-        }
+        val bluetoothAdapter: BluetoothAdapter? =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val bluetoothManager =
+                    context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                bluetoothManager.adapter
+            } else {
+                BluetoothAdapter.getDefaultAdapter()
+            }
 
         if (bluetoothAdapter == null) {
             return "Bluetooth is not available on this device"
@@ -214,7 +257,10 @@ class Functionality(private val context: Context) {
 
         // 🔐 Request BLUETOOTH_CONNECT permission if required (Android 12+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             if (context is Activity) {
                 ActivityCompat.requestPermissions(
@@ -260,8 +306,6 @@ class Functionality(private val context: Context) {
     }
 
 
-
-
     // to get battery percentage
     fun getBatteryPercentage(context: Context): Int {
         // Create an intent filter to listen for battery status updates
@@ -281,7 +325,6 @@ class Functionality(private val context: Context) {
             -1 // If the battery percentage cannot be fetched
         }
     }
-
 
 
     fun adjustVolume(action: Int) {
@@ -325,6 +368,253 @@ class Functionality(private val context: Context) {
         )
     }
 
+    // to change brightness
+    fun changeBrightness(activity: Activity, increase: Boolean, step: Float = 0.1f) {
+        val layoutParams = activity.window.attributes
+        var current = layoutParams.screenBrightness
+
+        // If brightness was never set before (defaults to -1), assume 0.5
+        if (current < 0f) current = 0.5f
+
+        val newBrightness = if (increase) {
+            (current + step).coerceIn(0.1f, 1.0f)
+        } else {
+            (current - step).coerceIn(0.1f, 1.0f)
+        }
+
+        layoutParams.screenBrightness = newBrightness
+        activity.window.attributes = layoutParams
+    }
+
+    // Load local songs (mp3, wav) from MediaStore
+    fun loadSongs() {
+        val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(MediaStore.Audio.Media.DATA)
+        val cursor = context.contentResolver.query(collection, projection, null, null, null)
+
+        cursor?.use {
+            val dataIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            while (it.moveToNext()) {
+                val filePath = it.getString(dataIndex)
+                if (filePath.endsWith(".mp3") || filePath.endsWith(".wav")) {
+                    songs.add(filePath)
+                }
+            }
+        }
+    }
+
+    // Play the current song or the first if not playing anything
+    fun playSongs() {
+        if (songs.isEmpty()) {
+            loadSongs()
+        }
+
+        if (songs.isEmpty()) {
+            Toast.makeText(context, "⚠️ No local songs found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Ensure index is valid
+        if (currentSongIndex >= songs.size) {
+            currentSongIndex = 0
+        }
+
+        mediaPlayer?.release()
+        mediaPlayer = MediaPlayer().apply {
+            setDataSource(songs[currentSongIndex])
+            prepare()
+            start()
+        }
+
+//        Toast.makeText(
+//            context,
+//            "🎵 Playing: ${File(songs[currentSongIndex]).name}",
+//            Toast.LENGTH_SHORT
+//        ).show()
+    }
+
+    fun pause() {
+        if (mediaPlayer?.isPlaying == true) {
+            mediaPlayer?.pause()
+        } else {
+//            Toast.makeText(context, "⏸️ No song is currently playing", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun resume() {
+        if (mediaPlayer != null && mediaPlayer?.isPlaying == false) {
+            mediaPlayer?.start()
+//            Toast.makeText(context, "▶️ Song resumed", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "▶️ Song is already playing or not initialized", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun stop() {
+        if (mediaPlayer != null) {
+            mediaPlayer?.stop()
+            mediaPlayer?.release()
+            mediaPlayer = null
+//            Toast.makeText(context, "⏹️ Music stopped", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun next() {
+        if (songs.isEmpty()) return
+
+        currentSongIndex = (currentSongIndex + 1) % songs.size
+        playSongs()
+    }
+
+    fun previous() {
+        if (songs.isEmpty()) return
+
+        currentSongIndex = if (currentSongIndex - 1 < 0) songs.size - 1 else currentSongIndex - 1
+        playSongs()
+    }
+    fun getCurrentSongName(): String {
+        return if (songs.isNotEmpty()) {
+            File(songs[currentSongIndex]).name
+        } else {
+            "No song playing"
+        }
+    }
+    fun getCurrentPosition(): Int {
+        return mediaPlayer?.currentPosition ?: 0
+    }
+
+    fun getDuration(): Int {
+        return mediaPlayer?.duration ?: 1
+    }
+
+    fun seekTo(position: Int) {
+        mediaPlayer?.seekTo(position)
+    }
+    //adding shuffle
+    fun toggleShuffle() {
+        if (!isShuffling) {
+            originalPlaylist = songs.toList()
+            songs = songs.shuffled().toMutableList()
+            isShuffling = true
+        } else {
+            originalPlaylist?.let {
+                songs = it.toMutableList()
+            }
+            isShuffling = false
+        }
+    }
+
+    fun isShufflingActive(): Boolean {
+        return isShuffling
+    }
+
+    fun isPlaying(): Boolean = mediaPlayer?.isPlaying == true
+
+    fun handleAlarmCommand(message: String) {
+        val timeRegex = Regex("""\b(\d{1,2})(?::(\d{2}))?\s?(am|pm)\b""", RegexOption.IGNORE_CASE)
+        val match = timeRegex.find(message)
+
+        if (match != null) {
+            val hour = match.groupValues[1].toInt()
+            val minute = if (match.groupValues[2].isNotEmpty()) match.groupValues[2].toInt() else 0
+            val amPm = match.groupValues[3].lowercase()
+
+            // Convert to 24-hour format
+            var alarmHour = hour % 12
+            if (amPm == "pm") alarmHour += 12
+
+            val calendar = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, alarmHour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+
+                // If the time is before now, set for the next day
+                if (before(Calendar.getInstance())) {
+                    add(Calendar.DATE, 1)
+                }
+            }
+
+            val triggerTime = calendar.timeInMillis
+            setAlarm(triggerTime)
+
+            Toast.makeText(context, "Alarm set for ${alarmHour}:${"%02d".format(minute)}", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Couldn't find a valid time in your message.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    @SuppressLint("ScheduleExactAlarm")
+    private fun setAlarm(triggerTime: Long) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Use setExactAndAllowWhileIdle for better compatibility with Doze mode
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+        }
+    }
+
+
+
+//    fun playRandomSong(context: Context) {
+//        val songs = getLocalSongs(context)
+//        if (songs.isNotEmpty()) {
+//            val randomPath = songs.random()
+//            try {
+//                mediaPlayer?.release()
+//                mediaPlayer = MediaPlayer().apply {
+//                    setDataSource(randomPath)
+//                    prepare()
+//                    isLooping = false
+//                    this@Functionality.isPlaying = true
+//                    start()
+//                }
+//                Toast.makeText(context,  "🎵Playing:${File(randomPath).name}", Toast.LENGTH_SHORT)
+//                    .show()
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//                Toast.makeText(context,  "❌Error playing file", Toast.LENGTH_SHORT).show()
+//            }
+//        } else {
+//            Toast.makeText(context, "⚠️No local songs found", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//    fun pauseSong(context: Context) {
+//        if (isPlaying) {
+//            mediaPlayer?.pause()
+//            isPlaying = false
+//            Toast.makeText(context, "⏸️ Song paused", Toast.LENGTH_SHORT).show()
+//        } else {
+//            Toast.makeText(context, "⏸️ No song is playing", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//    fun resumeSong(context: Context) {
+//        if (!isPlaying && mediaPlayer != null) {
+//            mediaPlayer?.start()
+//            isPlaying = true
+//            Toast.makeText(context, "▶️ Song resumed", Toast.LENGTH_SHORT).show()
+//        } else {
+//            Toast.makeText(context, "▶️ Song is already playing", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+
+
+
 }
+
+
+
+
+
 
 

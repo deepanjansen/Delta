@@ -21,7 +21,8 @@ data class Main(
 )
 enum class MessageType {
     TEXT,
-    WEATHER
+    WEATHER,
+    MUSIC
 }
 
 data class ChatMessage(

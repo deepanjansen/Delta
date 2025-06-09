@@ -1,5 +1,6 @@
 package com.example.delta
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -76,14 +77,34 @@ class ResponseHandler(private val context: Context) {
                 "start snapchat",
                 "run snapchat"
             ),
+            "google" to listOf("open google", "launch google", "start google", "run google"),
+            "playstore" to listOf("open playstore", "launch playstore", "start playstore", "run playstore"),
             "spotify" to listOf("open spotify", "launch spotify", "start spotify", "run spotify"),
             "chrome" to listOf("open chrome", "launch chrome", "start chrome", "run chrome"),
             "gmail" to listOf("open gmail", "launch gmail", "start gmail", "run gmail"),
-            "flashlight_on" to listOf("turn on flashlight", "enable flashlight", "flashlight on"),
+            "flashlight_on" to listOf(
+                "turn on flashlight",
+                "enable flashlight",
+                "switch on the torch",
+                "torch on",
+                "can you turn on the flashlight",
+                "please turn on the flashlight",
+                "light on",
+                "start flashlight",
+                "power on flashlight",
+                "activate flashlight"
+            ),
             "flashlight_off" to listOf(
                 "turn off flashlight",
                 "disable flashlight",
-                "flashlight off"
+                "switch off the torch",
+                "torch off",
+                "please turn off the flashlight",
+                "can you switch off the flashlight",
+                "light off",
+                "stop flashlight",
+                "power down flashlight",
+                "deactivate flashlight"
             ),
             "greet" to listOf("hi", "hello", "hey", "wassup", "hyy", "hy", "hii", "hlo"),
             "set_alarm" to listOf("set an alarm", "create an alarm", "schedule an alarm"),
@@ -109,13 +130,22 @@ class ResponseHandler(private val context: Context) {
             "time" to listOf(
                 "time", "current time"
             ),
-            "phone_control" to listOf(
-                "increase volume", "decrease volume", "mute the phone", "turn on do not disturb"
+            "increase_volume" to listOf(
+                "increase volume", "turn up the volume", "raise the volume", "volume up"
+            ),
+            "decrease_volume" to listOf(
+                "decrease volume", "turn down the volume", "lower the volume", "volume down"
+            ),
+            "mute_phone" to listOf(
+                "mute the phone", "mute", "silence the phone", "turn off the sound"
+            ),
+            "turn_on_dnd" to listOf(
+                "turn on do not disturb", "enable dnd", "activate do not disturb", "switch on dnd mode"
             ),
             "calls" to listOf(
                 "call", "call Dad"
             ),
-            "wifi_on" to listOf("turn on wifi", "switch on wifi", "enable wifi", "wifi on"),
+            "wifi_on" to listOf("turn on wifi", "switch on wifi", "enable wifi", "wifi on","wi-fi"),
             "wifi_off" to listOf("turn off wifi", "switch off wifi", "disable wifi", "wifi off"),
             "bluetooth_on" to listOf("turn on bluetooth", "switch on bluetooth" , "bluetooth on", "enable bluetooth"),
             "bluetooth_off" to listOf("turn off bluetooth", "switch off bluetooth", "bluetooth off", "disable bluetooth"),
@@ -131,7 +161,57 @@ class ResponseHandler(private val context: Context) {
                 "is my battery low?",
                 "what’s my current battery status?",
                 "battery percentage"
-            )
+            ),
+            "increase_brightness" to listOf(
+                "increase brightness",
+                "turn up the brightness",
+                "raise the brightness",
+                "brightness up",
+                "brightness increase"
+            ),
+            "decrease_brightness" to listOf(
+                "decrease brightness",
+                "turn down the brightness",
+                "lower the brightness",
+                "brightness decrease"
+            ),
+            "play_song" to listOf(
+                "play a music",
+                "song",
+                "play a song",
+                "play music",
+                "music"
+            ),
+            "resume_song" to listOf(
+                "resume song",
+                "resume music",
+                "resume",
+                "continue",
+                "play it again",
+                "play again"
+            ),
+            "pause_song" to listOf(
+                "pause song",
+                "pause music",
+                "pause",
+                "stop"
+            ),
+            "setting" to listOf(
+                "open setting",
+                "settings",
+                "open tools"
+            ),
+            "messages" to listOf(
+                "open message",
+                "open message app",
+                "message",
+                "messages",
+                "sms",
+                "open sms",
+            ),
+
+
+
         )
         val lowerInput = userInput.lowercase()
         for ((intent, phrases) in commands) {
@@ -156,6 +236,7 @@ class ResponseHandler(private val context: Context) {
 
     fun getResponse(query: String, history: List<Map<String, String>>, callback: (String) -> Unit) {
         val currentIntent = detectIntent(query)
+        Log.d("intent", currentIntent)
         var response=""
         if (currentIntent.isNotEmpty()) {
             when (currentIntent) {
@@ -164,7 +245,7 @@ class ResponseHandler(private val context: Context) {
                 "greet" -> callback(greetResponses.random())
 
                 "youtube", "instagram", "whatsapp", "facebook", "twitter", "snapchat",
-                "spotify", "chrome", "gmail"
+                "spotify", "chrome", "gmail", "google", "playstore","setting","messages","sms"
                     -> {
                     CoroutineScope(Dispatchers.Main).launch {
                         delay(1500) // wait 1.5 seconds
@@ -217,8 +298,6 @@ class ResponseHandler(private val context: Context) {
                         delay(2500)
                         Toast.makeText( context, response, Toast.LENGTH_SHORT).show()
                     }
-
-
                 }
                 "bluetooth_on" -> {
                     callback("Turning on bluetooth")
@@ -253,13 +332,81 @@ class ResponseHandler(private val context: Context) {
                         Toast.makeText( context, response, Toast.LENGTH_SHORT).show()
                     }
                 }
+                "increase_volume" -> {
+                    callback("Increasing volume")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500)
+                        functionality.adjustVolume(1)
+                        Toast.makeText( context, "Volume Increased", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                "decrease_volume" -> {
+                    callback("Decreasing volume")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500)
+                        functionality.adjustVolume(-1)
+                        Toast.makeText( context, "Volume Decreased", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                "mute_phone" -> {
+                    callback("Muting the phone")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500)
+                        functionality.adjustVolume(0)
+                        Toast.makeText( context, "Phone Muted", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                "increase_brightness" -> {
+                    callback("Increasing brightness")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500)
+                        functionality.changeBrightness(context as Activity, true,0.5f)
+                        Toast.makeText(context, "Brightness Increased", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                "decrease_brightness" -> {
+                    callback("Decreasing brightness")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500)
+                        functionality.changeBrightness(context as Activity, false,0.5f)
+                        Toast.makeText(context, "Brightness Decreased", Toast.LENGTH_SHORT).show()
+                    }
+
+                }
+                "set_alarm" -> {
+                    callback("Setting an alarm")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(1500)
+                        functionality.handleAlarmCommand(query)
+                    }
+                }
+//                "play_song" -> {
+//                    callback("Playing Song")
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        delay(1500)
+//                        functionality.playRandomSong(context)
+//                    }
+//                }
+//                "resume_song" -> {
+//                    callback("Resuming Song")
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        delay(1500)
+//                        functionality.resume(context)
+//                    }
+//                }
+//                "pause_song" -> {
+//                    callback("Pausing Song")
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        delay(1500)
+//                        functionality.pause(context)
+//                    }
+//                }
 
                 "navigation" -> callback("Opening Google Maps")
                 "music_control" -> callback("Controlling music playback")
 
                 else -> ask_gemini.getGeminiResponse(query, history) { reply ->
                     callback(reply)
-
                 }
             }
         } else {
