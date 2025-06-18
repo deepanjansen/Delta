@@ -1,4 +1,4 @@
-# 🤖 Delta - Your An Android Virtual Assistant
+# 🤖 Delta - Your Android Virtual Assistant
 
 Delta is a smart, multilingual Android virtual assistant designed to simplify your everyday tasks using voice commands, natural language understanding, and contextual awareness. Built with Jetpack Compose, Firebase, and Gemini AI, Delta offers a conversational UI with personalized, intelligent assistance.
 
