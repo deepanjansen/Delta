@@ -111,7 +111,7 @@ Delta is a smart, multilingual Android virtual assistant designed to simplify yo
 
     * Add your `google-services.json`
     * Configure Firestore & Storage
-4. **Add your API keys** for Gemini,Weather & News
+4. **Add your API keys** for Gemini, Weather & News
 5. **Build & Run**
 
 ---
