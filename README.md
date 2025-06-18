@@ -109,6 +109,9 @@ Delta is a smart, multilingual Android virtual assistant designed to simplify yo
 ### 📰 Music Card
 <img src="app/src/main/assets/music_screenshot.jpg" alt="Music Card" width="300" height="auto"/>
 
+### 📰 News Card
+<img src="app/src/main/assets/news_screenshot.jpg" alt="News Card" width="300" height="auto"/>
+
 ---
 
 
