@@ -58,22 +58,43 @@ Delta is a smart, multilingual Android virtual assistant designed to simplify yo
 
 ```
 📁 app/
-┣ 📁 ui/
-┃ ┗ 📄 ChatScreen.kt
-┃ ┗ 📄 Sidebar.kt
-┣ 📁 viewmodel/
-┃ ┗ 📄 ChatViewModel.kt
-┃ ┗ 📄 ProfileViewModel.kt
-┣ 📁 model/
-┃ ┗ 📄 ChatMessage.kt
-┣ 📁 utils/
-┃ ┗ 📄 IntentDetector.kt
-┃ ┗ 📄 ResponseHandler.kt
-┃ ┗ 📄 WeatherData.kt
-┃ ┗ 📄 NewsArticle.kt
-┣ 📁 ai/
-┃ ┗ 📄 GeminiHelper.kt
-┣ 📄 MainActivity.kt
+┗ 📂 src/
+   ┗ 📂 main/
+      ┣ 📄 AndroidManifest.xml
+      ┣ 📂 assets/
+      ┣ 📂 res/
+      ┣ 📂 java/com/example/delta/
+         ┣ 📂 ui/
+         ┃ ┣ 📄 ChatScreen.kt
+         ┃ ┗ 📄 Sidebar.kt
+         ┣ 📂 viewmodel/
+         ┃ ┣ 📄 ChatViewModel.kt
+         ┃ ┣ 📄 ProfileViewModel.kt
+         ┃ ┗ 📄 AuthViewModel.kt
+         ┣ 📂 model/
+         ┃ ┗ 📄 WeatherResponse.kt
+         ┣ 📂 utils/
+         ┃ ┣ 📄 ResponseHandler.kt
+         ┃ ┣ 📄 WeatherData.kt
+         ┃ ┣ 📄 Assets.kt
+         ┃ ┗ 📄 Functionality.kt
+         ┣ 📂 ai/
+         ┃ ┗ 📄 GeminiHelper.kt
+         ┣ 📂 music/
+         ┃ ┗ 📄 MusicPlayerViewModel.kt
+         ┣ 📂 news/
+         ┃ ┣ 📄 NewsApiService.kt
+         ┃ ┣ 📄 NewsApiClient.kt
+         ┃ ┣ 📄 NewsRepository.kt
+         ┃ ┗ 📄 NewsViewModel.kt
+         ┣ 📂 speech/
+         ┃ ┣ 📄 SpeechToTextHelper.kt
+         ┃ ┗ 📄 TextToSpeechHelper.kt
+         ┣ 📂 alarm/
+         ┃ ┗ 📄 AlarmReceiver.kt
+         ┣ 📄 MainActivity.kt
+         ┣ 📄 MyDeviceAdminReceiver.kt
+
 ```
 
 ---
