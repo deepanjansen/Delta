@@ -104,7 +104,7 @@ Delta is a smart, multilingual Android virtual assistant designed to simplify yo
 1. **Clone the repo**
 
    ```bash
-   git clone https://github.com/jaiswal00007/delta_test1.git
+   git clone https://github.com/deepanjansen/Delta.git
    ```
 2. **Open in Android Studio**
 3. **Set up Firebase**
