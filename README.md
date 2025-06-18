@@ -6,7 +6,7 @@ Delta is a smart, multilingual Android virtual assistant designed to simplify yo
 
 ## ✨ Features
 
-* 🎧 **Chat Based Interaction** – Chat with Delta and solve your queries.
+* 💬 **Chat Based Interaction** – Chat with Delta and solve your queries.
 * 🎧 **Voice Interaction** – Talk to Delta using your voice via STT (Speech-to-Text).
 * 💬 **Natural Language Chat UI** – Responsive, emoji-friendly chat interface.
 * 🧠 **Contextual AI Responses** – Context-aware conversations using Gemini API with memory of last 10 exchanges.
