@@ -114,10 +114,10 @@ Delta is a smart, multilingual Android virtual assistant designed to simplify yo
 
 ## 🧠 Future Roadmap
 
+* [ ] Finetune with Offline Model
 * [ ] Offline NLP with fine-tuned MobileBERT
 * [ ] IoT Device Control Integration
 * [ ] Smart Reminders & Alarms
-* [ ] App Integration (Calendar, Contacts, Calls)
 * [ ] Multi-language Chat Translation
 * [ ] Sentiment-aware Responses
 
