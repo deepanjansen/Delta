@@ -162,4 +162,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 📬 Contact
 
-Created with ❤️ by [Anshu Jaiswal](https://github.com/geekstreak2025)
+Created with ❤️ by [Anshu Jaiswal](https://github.com/jaiswal00007)  
+🔗 **LinkedIn** – [Anshu Jaiswal](https://www.linkedin.com/in/anshu-jaiswal-a76b192b7/)
+
