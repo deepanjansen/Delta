@@ -98,16 +98,16 @@ Delta is a smart, multilingual Android virtual assistant designed to simplify yo
 ## 📸 Screenshots
 
 ### 📱 Chat UI
-![Chat UI](assets/main_ui.jpg)
+![Chat UI](app/src/main/assets/main_ui.jpg)
 
 ### 🌦️ Weather Card
-![Weather Card](assets/weather_screenshot.jpg)
+![Weather Card](app/src/main/assets/weather_screenshot.jpg)
 
 ### 📰 Music Card
-![News](assets/music_screenshot.jpg)
+![News](app/src/main/assets/music_screenshot.jpg)
 
 ###  Chat History
-![Chat History](assets/sidebar_screenshot.jpg)
+![Chat History](app/src/main/assets/sidebar_screenshot.jpg)
 
 ---
 
